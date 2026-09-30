@@ -108,6 +108,38 @@ crc.checksum
 # => 165789842
 ```
 
+Find a minimum-weight binary patch for a target checksum:
+
+```ruby
+require 'digest/crc32'
+
+data = File.binread('firmware.bin')
+mask = "\0".b * data.bytesize
+
+# Bit 0 is the least significant bit of each byte. Set bits may be far apart;
+# they do not have to form a contiguous four-byte block.
+mask.setbyte(16, 0b00000101)
+mask.setbyte(4096, 0b00000010)
+
+result = Digest::CRC32.solve_patch(data, mask, 0x12345678, budget: 10_000)
+
+if result.found?
+  result.status           # :optimal or :best_effort
+  result.patched_data     # a new binary String; `data` is not modified
+  result.patch_mask       # XOR mask containing only allowed mask bits
+  result.changes          # [{offset:, bit:, old_bit:, new_bit:, ...}]
+  result.flips            # Hamming weight of this concrete patch
+  result.proven_minimum   # true only after smaller weights were exhausted
+  result.budget_exhausted # true when a feasible patch exists but proof stopped
+else
+  result.status           # :no_solution
+end
+```
+
+The solver first determines whether the target is reachable from the allowed
+bits. If the candidate budget runs out, it can still return a valid
+`best_effort` patch; budget exhaustion is never reported as `no_solution`.
+
 Defining your own CRC class:
 
 ```ruby
