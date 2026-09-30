@@ -1,3 +1,8 @@
+### Unreleased
+
+* Added pure-Ruby `Digest::CRC.solve_patch` for finding minimum-Hamming-weight
+  bit-masked CRC patches.
+
 ### 0.7.0 / 2025-01-28
 
 * Added {Digest::CRC64NVMe}.

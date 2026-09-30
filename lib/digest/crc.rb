@@ -209,3 +209,5 @@ module Digest
 
   end
 end
+
+require 'digest/crc_patch'

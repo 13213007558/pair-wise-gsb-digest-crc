@@ -108,6 +108,25 @@ crc.checksum
 # => 165789842
 ```
 
+Find a bit-masked patch that makes a CRC match a target value:
+
+```ruby
+require 'digest/crc32'
+
+data = File.binread('container.bin')
+mask = File.binread('writable-bits.bitmask')
+
+result = Digest::CRC32.solve_patch(data, mask, target_crc, search_budget: 10_000)
+
+result.feasible             # true when a linear GF(2) solution exists
+result.minimum_proven? # true when every smaller Hamming weight was searched
+result.found?          # true if result.patch is available
+result.patch           # binary XOR mask; zero on every non-writable bit
+result.modified_data   # patched copy; the original data is never mutated
+result.flipped_bits    # [[byte_index, bit_index], ...]
+result.status          # :optimal, :infeasible, or :budget_exhausted
+```
+
 Defining your own CRC class:
 
 ```ruby
