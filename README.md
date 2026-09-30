@@ -108,6 +108,27 @@ crc.checksum
 # => 165789842
 ```
 
+Combine the CRC checksums of two chunks of data, without re-reading the
+first chunk:
+
+```ruby
+crc1 = Digest::CRC32.checksum(chunk1)
+crc2 = Digest::CRC32.checksum(chunk2)
+
+Digest::CRC32.combine(crc1, crc2, chunk2.bytesize) == Digest::CRC32.checksum(chunk1 + chunk2)
+# => true
+```
+
+Recover the CRC checksum of one chunk, given the checksum of the
+concatenation and of the other chunk:
+
+```ruby
+Digest::CRC32.uncombine(combined, crc2, chunk2.bytesize) == crc1
+# => true
+Digest::CRC32.uncombine_last(combined, crc1, chunk2.bytesize) == crc2
+# => true
+```
+
 Defining your own CRC class:
 
 ```ruby
