@@ -108,6 +108,31 @@ crc.checksum
 # => 165789842
 ```
 
+Combine checksums of two contiguous strings without reading either string:
+
+```ruby
+first  = Digest::CRC32.checksum("one")
+second = Digest::CRC32.checksum("two")
+
+Digest::CRC32.combine(first, second, "two".bytesize)
+# => Digest::CRC32.checksum("onetwo")
+```
+
+Recover either segment checksum. Pass the byte length of the second segment,
+the same length used by `combine`:
+
+```ruby
+combined = Digest::CRC32.checksum("onetwo")
+first  = Digest::CRC32.checksum("one")
+second = Digest::CRC32.checksum("two")
+
+Digest::CRC32.uncombine(combined, second, "two".bytesize)
+# => first
+
+Digest::CRC32.uncombine(combined, first, "two".bytesize, missing: :second)
+# => second
+```
+
 Defining your own CRC class:
 
 ```ruby
