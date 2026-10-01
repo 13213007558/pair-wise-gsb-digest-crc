@@ -108,6 +108,44 @@ crc.checksum
 # => 165789842
 ```
 
+Calibrate an unknown CRC from samples when the width and generator polynomial
+are known:
+
+```ruby
+require 'digest/crc'
+
+samples = [
+  ['123456789', 0xcbf43926],
+  ['hello',      0x3610a686],
+  ['',           0x00000000]
+]
+
+solutions = Digest::CRC.calibrate(32, 0x04c11db7, samples)
+solution = solutions.first
+
+solution.reflect_input
+# => true
+solution.init_crc
+# => 0xffffffff
+solution.xor_mask
+# => 0xffffffff
+
+custom_crc = solution.to_crc_class
+custom_crc.checksum('123456789')
+# => 3421780262
+```
+
+When the samples do not identify every parameter, `unique?` is false and the
+returned solution contains a particular parameter set plus a free-variable
+basis. Every variation can be built and verified with the same CRC class:
+
+```ruby
+unless solution.unique?
+  particular = solution.to_crc_class
+  first_variation = solution.to_crc_class(1)
+end
+```
+
 Defining your own CRC class:
 
 ```ruby

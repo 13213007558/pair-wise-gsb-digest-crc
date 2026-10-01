@@ -20,6 +20,9 @@ module Digest
     # Define true or false whether the input direction is bit reversed or not of the CRC checksum
     REFLECT_INPUT = nil
 
+    # Define true or false whether the output direction is bit reversed or not of the CRC checksum
+    REFLECT_OUTPUT = nil
+
     # Default place holder CRC table
     TABLE = [].freeze
 
@@ -80,6 +83,26 @@ module Digest
     end
 
     #
+    # Reverses the bits of a value with the given bit width.
+    #
+    # @param [Integer] value
+    #   The value to reverse.
+    #
+    # @param [Integer] width
+    #   The bit width of the value.
+    #
+    # @return [Integer]
+    #   The bit-reversed value.
+    #
+    def self.reflect_bits(value,width)
+      width.times.reduce(0) do |reflected,_|
+        reflected = (reflected << 1) | (value & 1)
+        value     = value >> 1
+        reflected
+      end
+    end
+
+    #
     # Initializes the CRC checksum.
     #
     def initialize
@@ -87,6 +110,8 @@ module Digest
       @xor_mask      = self.class.const_get(:XOR_MASK)
       @width         = self.class.const_get(:WIDTH)
       @reflect_input = self.class.const_get(:REFLECT_INPUT)
+      reflect_output = self.class.const_get(:REFLECT_OUTPUT)
+      @reflect_output = reflect_output.nil? ? @reflect_input : reflect_output
       @table         = self.class.const_get(:TABLE)
 
       reset
@@ -195,7 +220,13 @@ module Digest
     #   The resulting CRC checksum.
     #
     def checksum
-      @crc ^ @xor_mask
+      result = @crc
+
+      if @reflect_output != @reflect_input
+        result = self.class.reflect_bits(result,@width)
+      end
+
+      result ^ @xor_mask
     end
 
     #
@@ -209,3 +240,5 @@ module Digest
 
   end
 end
+
+require_relative 'crc/calibrator'
