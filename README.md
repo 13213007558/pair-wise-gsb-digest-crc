@@ -131,6 +131,36 @@ module Digest
 end
 ```
 
+Calibrating the unknown initial value, final XOR mask, and reflection
+convention from message/checksum samples:
+
+```ruby
+samples = [
+  ['', Digest::CRC32.checksum('')],
+  ['abc', Digest::CRC32.checksum('abc')],
+  ["\x00abc", Digest::CRC32.checksum("\x00abc")]
+]
+
+solutions = Digest::CRC.calibrate(
+  width: 32,
+  polynomial: 0x04c11db7,
+  samples: samples
+)
+
+solution = solutions.first
+solution.init_crc        # => 4294967295
+solution.xor_mask        # => 4294967295
+solution.reflect_input   # => true
+solution.unique?         # => true
+solution.crc_class.checksum('abc')
+```
+
+When the samples do not determine every parameter, `unique?` is false and
+`free_variables` contains an XOR basis over the combined `init_crc`/`xor_mask`
+parameter vector. Use `parameters_for` or `candidate_for` with bit flags to
+select a member of the affine solution set; no arbitrary parameter is reported
+as a unique answer.
+
 ## Benchmarks
 
 ### Ruby 2.7.4 (pure Ruby)
